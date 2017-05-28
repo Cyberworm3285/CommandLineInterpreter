@@ -1,0 +1,6 @@
+c:\users\cyber\onedrive\dokumente\visual studio 2017\Projects\ConsoleInputMapEngine\ConsoleInputMapEngine\bin\Debug\ConsoleInputMapEngine.exe.config
+c:\users\cyber\onedrive\dokumente\visual studio 2017\Projects\ConsoleInputMapEngine\ConsoleInputMapEngine\bin\Debug\ConsoleInputMapEngine.exe
+c:\users\cyber\onedrive\dokumente\visual studio 2017\Projects\ConsoleInputMapEngine\ConsoleInputMapEngine\bin\Debug\ConsoleInputMapEngine.pdb
+c:\users\cyber\onedrive\dokumente\visual studio 2017\Projects\ConsoleInputMapEngine\ConsoleInputMapEngine\obj\Debug\ConsoleInputMapEngine.csprojResolveAssemblyReference.cache
+c:\users\cyber\onedrive\dokumente\visual studio 2017\Projects\ConsoleInputMapEngine\ConsoleInputMapEngine\obj\Debug\ConsoleInputMapEngine.exe
+c:\users\cyber\onedrive\dokumente\visual studio 2017\Projects\ConsoleInputMapEngine\ConsoleInputMapEngine\obj\Debug\ConsoleInputMapEngine.pdb
