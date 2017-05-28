@@ -68,12 +68,6 @@ namespace ConsoleInputMapEngine.ConsoleInput
                     argValuePairs.Add(a.Substring(0, index), a.Substring(index + 1, a.Length - index - 1));
                     marker.Add(a);
                 }
-                //string[] temp = a.Split(argumentIndicators.ToArray(), StringSplitOptions.RemoveEmptyEntries);
-                //if (temp.Length > 1)
-                //{
-                //    argValuePairs.Add(temp[0], temp.Skip(1).ToArray());
-                //    marker.Add(a);
-                //}
             });
             marker.ForEach(m => args.Remove(m));
             output = argValuePairs;

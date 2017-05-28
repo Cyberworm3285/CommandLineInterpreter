@@ -1,0 +1,9 @@
+Print Hello World
+Set Boi (Freeze(Array Generate Random))
+Print (Get Boi)
+Print (Array SortNumbers (Get Boi)) Color:Blue
+Print Max (Array Operator MAX (Get Boi)) Color:Red
+Print Min (Array Operator MIN (Get Boi)) Color:Green
+Set BoiS (Freeze(Array Serialize (Get Boi)))
+Print (Freeze (Get BoiS)) Color:Yellow
+Print (Array Deserialize (Freeze (Get BoiS))) Color:Yellow

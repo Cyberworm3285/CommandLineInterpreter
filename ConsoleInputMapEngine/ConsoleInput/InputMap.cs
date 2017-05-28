@@ -18,17 +18,16 @@ namespace ConsoleInputMapEngine.ConsoleInput
         public List<char> ArgumentIndicators { get; set; }
         public List<string> NeutralFromatters { get; set; }
         public StringSplitOptions SplitOptions { get; set; }
-        protected string Cache { get; set; }
 
         public InputMap(bool caseSensitve, params string[] seperators)
         {
             Seperators = seperators.ToList();
-            ForwarderOpenings = new List<char> { '{' };
-            ForwarderFinishers = new List<char> { '}' };
+            ForwarderOpenings = new List<char> { '(' };
+            ForwarderFinishers = new List<char> { ')' };
             NeutralFromatters = new List<string> { "_", "~" };
             ArgumentIndicators = new List<char>() { ':', '=' };
-            IgnoreOpenings = new List<char> { '[' };
-            IgnoreFinishers = new List<char> { ']' };
+            IgnoreOpenings = new List<char> { '{' };
+            IgnoreFinishers = new List<char> { '}' };
             SplitOptions = StringSplitOptions.RemoveEmptyEntries;
 
         }
@@ -52,7 +51,7 @@ namespace ConsoleInputMapEngine.ConsoleInput
                 for (i = index; i >= 0; i--) //vom index zurück um den passenden anfang zu finden
                     if (ForwarderOpenings.Contains(input[i]))
                         break;
-                string temp = Root.RootEval(old.Substring(i + 1, index - i - 1).Split(Seperators.ToArray(), SplitOptions).ToList(), Seperators[0]); // der alte beinhaltet die unzensierten argument-funtkionen
+                string temp = Root.RootEval(SplitArgs(old.Substring(i + 1, index - i - 1), input.Substring(i + 1, index - i -1)), Seperators[0]); // der alte beinhaltet die unzensierten argument-funtkionen
 
                 NeutralFromatters.ForEach(n => temp = temp.Replace(n, ""));
 
@@ -82,7 +81,8 @@ namespace ConsoleInputMapEngine.ConsoleInput
             censored = input;
             modified = input;
             Stack<int> b = new Stack<int>();
-            for (int i = 0; i < input.Length; i++) // Zensieren
+            int removed = 0;
+            for (int i = 0; i < input.Length; i++)
             {
                 if (IgnoreOpenings.Contains(input[i]))
                     b.Push(i);
@@ -90,15 +90,18 @@ namespace ConsoleInputMapEngine.ConsoleInput
                 {
                     if (b.Count == 1)
                     {
-                        modified = modified.Remove(b.Peek(), 1);
-                        modified = modified.Insert(b.Peek(), NeutralFromatters[0]);
                         modified = modified.Remove(i, 1);
-                        modified = modified.Insert(i, NeutralFromatters[0]);
+                        modified = modified.Remove(b.Peek() - removed, 1);
+                        censored = censored.Remove(i, 1);
+                        censored = censored.Remove(b.Peek() - removed, 1);
+                        removed++;
                     }
-                    censored = censored.Remove(b.Peek(), i - b.Peek() + 1);
-                    censored = censored.Insert(b.Peek(), new string('X', i - b.Pop() + 1));
+                    censored = censored.Remove(b.Peek() - removed + 1 , i - b.Peek() - removed);
+                    censored = censored.Insert(b.Peek() - removed + 1, new string('X', i - b.Pop() - removed));
                 }
             }
+            if (censored.Length != modified.Length)
+                throw new Exception();
         }
 
         private bool Validate(string input)

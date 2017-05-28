@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
+
+using static Newtonsoft.Json.JsonConvert;
 
 namespace ConsoleInputMapEngine
 {
@@ -35,6 +39,16 @@ namespace ConsoleInputMapEngine
                 "Ja ne"
             };
             return answers[rand.Next(0, answers.Length)];
+        }
+
+        public static string JSON<T>(T input)
+        {
+            return SerializeObject(input, Newtonsoft.Json.Formatting.Indented);
+        }
+
+        public static T DeJSON<T>(string input)
+        {
+            return DeserializeObject<T>(input);
         }
     }
 }

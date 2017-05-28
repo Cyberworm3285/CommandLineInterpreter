@@ -4,3 +4,5 @@ c:\users\cyber\onedrive\dokumente\visual studio 2017\Projects\ConsoleInputMapEng
 c:\users\cyber\onedrive\dokumente\visual studio 2017\Projects\ConsoleInputMapEngine\ConsoleInputMapEngine\obj\Debug\ConsoleInputMapEngine.csprojResolveAssemblyReference.cache
 c:\users\cyber\onedrive\dokumente\visual studio 2017\Projects\ConsoleInputMapEngine\ConsoleInputMapEngine\obj\Debug\ConsoleInputMapEngine.exe
 c:\users\cyber\onedrive\dokumente\visual studio 2017\Projects\ConsoleInputMapEngine\ConsoleInputMapEngine\obj\Debug\ConsoleInputMapEngine.pdb
+C:\Users\cyber\onedrive\dokumente\visual studio 2017\Projects\ConsoleInputMapEngine\ConsoleInputMapEngine\bin\Debug\Newtonsoft.Json.dll
+C:\Users\cyber\onedrive\dokumente\visual studio 2017\Projects\ConsoleInputMapEngine\ConsoleInputMapEngine\bin\Debug\Newtonsoft.Json.xml

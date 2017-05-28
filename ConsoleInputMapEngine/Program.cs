@@ -5,6 +5,7 @@ using System.Text;
 
 using ConsoleInputMapEngine.ConsoleInput;
 using static ConsoleInputMapEngine.Methods;
+using System.IO;
 
 namespace ConsoleInputMapEngine
 {
@@ -30,16 +31,18 @@ namespace ConsoleInputMapEngine
             action(t);
             return t;
         }
-        public static void AddOrOverride<T1, T2>(this Dictionary<T1, T2> d, T1 key, T2 value)
+        public static string AddOrOverride<T1, T2>(this Dictionary<T1, T2> d, T1 key, T2 value)
         {
             if (d.ContainsKey(key))
             {
                 d.Remove(key);
                 d.Add(key, value);
+                return "[Overridden]";
             }
             else
             {
                 d.Add(key, value);
+                return "[Succes]";
             }
         }
     }
@@ -48,7 +51,7 @@ namespace ConsoleInputMapEngine
     {
         static void Main(string[] args)
         {
-            InputMap map = new InputMap(false, ">", " ", ",");
+            InputMap map = new InputMap(false, " ");
 
             //--------Temporäre Zählvaribale für Linq-Operationen--------
             int miscCounter = 0;
@@ -61,21 +64,24 @@ namespace ConsoleInputMapEngine
             {
                 Children = new Dictionary<string, InputNode>(StringComparer.OrdinalIgnoreCase)
                 {
+                    { "Clear", new InputNode(a => { Console.Clear(); return "[Console Cleared]"; }) },
+                    { "Freeze", new InputNode(a => "{" + string.Join(" ", a.ToArray()) + "}") },
+                    { "Set", new InputNode(a => variables.AddOrOverride(a[0], a[1]) ) },
                     {
-                        "Set",
-                        new InputNode(a =>
+                        "Script",
+                        new InputNode(a => 
                         {
-                            if (variables.ContainsKey(a[0]))
+                            string[] lines = null;
+                            try
                             {
-                                variables.Remove(a[0]);
-                                variables.Add(a[0], a[1]);
-                                return "[Overridden]";
+                                lines = File.ReadAllLines(Path.Combine(Directory.GetCurrentDirectory(), a[0]));
                             }
-                            else
+                            catch (IOException)
                             {
-                                variables.Add(a[0], a[1]);
-                                return "[Success]";
+                                return $"Path \"{a[0]}\" not found";
                             }
+                            Array.ForEach(lines, l => map.Eval(l));
+                            return "[Script iterated]";
                         })
                     },
                     {
@@ -234,35 +240,13 @@ namespace ConsoleInputMapEngine
                                 { "Reverse", new InputNode(a => { a.Reverse(); return string.Join(" ", a.ToArray()); }) },
                                 { "Sort", new InputNode(a => string.Join(" ", a.DAR(b => b.Sort()).ToArray())) },
                                 { "SortNumbers", new InputNode(a => string.Join(" ", a.OrderBy(b => { double result; double.TryParse(b, out result); return result; }).ToArray())) },
-                                {
-                                    "Split",
-                                    new InputNode(a => 
-                                    {
-                                        Dictionary<string, string> adds;
-                                        InputNode.EvalArguments(a, out adds, map.ArgumentIndicators);
-                                        string sep;
-                                        if (!adds.TryGetValue("Seperator", out sep))
-                                            return "[ERROR]";
-                                        return string.Join(" ", a[0].Split(new[]{ sep }, map.SplitOptions));
-                                    })
-                                },
-                                {
-                                    "Join",
-                                    new InputNode(a => 
-                                    {
-                                        Dictionary<string, string> adds;
-                                        InputNode.EvalArguments(a, out adds, map.ArgumentIndicators);
-                                        string sep;
-                                        if (!adds.TryGetValue("Seperator", out sep))
-                                            return "[Error]";
-                                        return string .Join(sep, a.ToArray());
-                                    })
-                                },
+                                { "Serialize", new InputNode(a => JSON(a)) },
+                                { "Deserialize", new InputNode(a => string.Join(" ", DeJSON<string[]>(a[0]))) },
                                 { "Generate", new InputNode
                                     {
                                         Children = new NCS
                                         {
-                                            { "Random", new InputNode(a => 
+                                            { "Random", new InputNode(a =>
                                                 {
                                                     int c = 10;
                                                     int l = 0;
@@ -312,7 +296,7 @@ namespace ConsoleInputMapEngine
                                 },
                                 {
                                     "ForEach",
-                                    new InputNode(a => 
+                                    new InputNode(a =>
                                     {
                                         Dictionary<string, string> adds;
                                         InputNode.EvalArguments(a, out adds, map.ArgumentIndicators);
@@ -337,7 +321,9 @@ namespace ConsoleInputMapEngine
             };
 
             map.Print(s => Console.Write(s));
-            for(;;) map.Eval(Console.ReadLine());
+            for (;;)
+                try { map.Eval(Console.ReadLine()); }
+                catch (Newtonsoft.Json.JsonException e) { Console.WriteLine(e); }
         }
     }
 }
