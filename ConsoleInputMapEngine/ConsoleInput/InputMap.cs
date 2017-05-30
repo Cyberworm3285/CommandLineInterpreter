@@ -10,7 +10,8 @@ namespace ConsoleInputMapEngine.ConsoleInput
     class InputMap
     {
         public InputNode Root { get; set; } 
-        public List<string> Seperators { get; set; }
+
+        public List<char> Seperators { get; set; }
         public List<char> ForwarderOpenings { get; set; }
         public List<char> ForwarderFinishers { get; set; }
         public List<char> IgnoreOpenings { get; set; }
@@ -19,7 +20,7 @@ namespace ConsoleInputMapEngine.ConsoleInput
         public List<string> NeutralFromatters { get; set; }
         public StringSplitOptions SplitOptions { get; set; }
 
-        public InputMap(bool caseSensitve, params string[] seperators)
+        public InputMap(bool caseSensitve, params char[] seperators)
         {
             Seperators = seperators.ToList();
             ForwarderOpenings = new List<char> { '(' };
@@ -36,6 +37,8 @@ namespace ConsoleInputMapEngine.ConsoleInput
         {
             if (input == null || input.Equals(string.Empty)) return "[ERROR]";
             NeutralFromatters.ForEach(f => input = input.Replace(f, ""));
+            input = input.Replace("\t", " ");
+            input = input.TrimStart(Seperators.ToArray());
 
             if (!Validate(input))
             {
@@ -52,56 +55,60 @@ namespace ConsoleInputMapEngine.ConsoleInput
                     if (ForwarderOpenings.Contains(input[i]))
                         break;
                 string temp = Root.RootEval(SplitArgs(old.Substring(i + 1, index - i - 1), input.Substring(i + 1, index - i -1)), Seperators[0]); // der alte beinhaltet die unzensierten argument-funtkionen
+                string tempC;
+                Censor(temp, out tempC, out temp); // mögliche neue statische blöcke aufgetaucht
 
                 NeutralFromatters.ForEach(n => temp = temp.Replace(n, ""));
 
                 input = input.Remove(i, index - i + 1);
                 old = old.Remove(i, index - i + 1);
 
-                if (i != 0)
-                {
-                    old = old.Insert(i, Seperators[0] + temp + Seperators[0]);
-                    input = input.Insert(i, Seperators[0] + temp + Seperators[0]);
-                }
-                else
-                {
-                    old = old.Insert(i, temp + Seperators[0]); // damit am anfang kein seperator is
-                    input = input.Insert(i, temp + Seperators[0]);
-                }
-                Censor(old, out input, out old); // mögliche neue statische blöcke aufgetaucht
+                old = old.Insert(i, Seperators[0] + temp + Seperators[0]);
+                input = input.Insert(i, Seperators[0] + tempC + Seperators[0]);
+
                 index = input.IndexOfAny(ForwarderFinishers.ToArray());
             }
-            //zB:
-            //for iterator:i func:[for iterator:j func:[print{Get i}{Get j}]]
             return Root.RootEval(SplitArgs(old, input), Seperators[0]);
         }
 
         private void Censor(string input, out string censored, out string modified)
         {
-            censored = input;
-            modified = input;
-            Stack<int> b = new Stack<int>();
-            int removed = 0;
+            StringBuilder cens = new StringBuilder();
+            StringBuilder modi = new StringBuilder();
+            int ignored = 0;
             for (int i = 0; i < input.Length; i++)
             {
                 if (IgnoreOpenings.Contains(input[i]))
-                    b.Push(i);
+                {
+                    ignored++;
+                    if (ignored > 1)
+                    {
+                        cens.Append("X");
+                        modi.Append(input[i]);
+                    }
+                }
                 else if (IgnoreFinishers.Contains(input[i]))
                 {
-                    if (b.Count == 1)
+                    if (ignored > 1)
                     {
-                        modified = modified.Remove(i, 1);
-                        modified = modified.Remove(b.Peek() - removed, 1);
-                        censored = censored.Remove(i, 1);
-                        censored = censored.Remove(b.Peek() - removed, 1);
-                        removed++;
+                        cens.Append("X");
+                        modi.Append(input[i]);
                     }
-                    censored = censored.Remove(b.Peek() - removed + 1 , i - b.Peek() - removed);
-                    censored = censored.Insert(b.Peek() - removed + 1, new string('X', i - b.Pop() - removed));
+                    ignored--;
+                }
+                else if (ignored > 0)
+                {
+                    modi.Append(input[i]);
+                    cens.Append("X");
+                }
+                else
+                {
+                    cens.Append(input[i]);
+                    modi.Append(input[i]);
                 }
             }
-            if (censored.Length != modified.Length)
-                throw new Exception();
+            censored = cens.ToString();
+            modified = modi.ToString();
         }
 
         private bool Validate(string input)
@@ -129,10 +136,10 @@ namespace ConsoleInputMapEngine.ConsoleInput
             List<string> result = new List<string>();
             for (int i = 0; i < input.Length; i++)
             {
-                if (input[i] == censored[i] && Seperators.Contains(input[i].ToString()) && hasStart)
+                if (input[i] == censored[i] && Seperators.Contains(input[i]) && hasStart)
                 {
                     result.Add(input.Substring(start, i - start));
-                    while (i < input.Length && Seperators.Contains(input[i].ToString())) i++;
+                    while (i < input.Length && Seperators.Contains(input[i])) i++;
                     start = i;
                 }
             }

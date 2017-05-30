@@ -45,7 +45,7 @@ namespace ConsoleInputMapEngine.ConsoleInput
             else return Function(args);
         }
 
-        public string RootEval(List<string> args, string validSeperator)
+        public string RootEval(List<string> args, char validSeperator)
         {
             if (Children == null)
                 return Function(args);
@@ -53,7 +53,7 @@ namespace ConsoleInputMapEngine.ConsoleInput
                 return Function(null);
             else if (Children.Keys.Contains(args[0]))
                 return Children[args[0]].Eval(args.Skip(1).ToList());
-            else return string.Join(validSeperator, args.ToArray());
+            else return string.Join(validSeperator.ToString(), args.ToArray());
         }
 
         public static void EvalArguments(List<string> args, out Dictionary<string, string> output, List<char> argumentIndicators)

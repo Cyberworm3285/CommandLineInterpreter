@@ -51,36 +51,84 @@ namespace ConsoleInputMapEngine
     {
         static void Main(string[] args)
         {
-            InputMap map = new InputMap(false, " ");
+            InputMap map = new InputMap(false, ' ');
 
             //--------Temporäre Zählvaribale für Linq-Operationen--------
             int miscCounter = 0;
             //----------------------------------------------------------
 
             Dictionary<string, string> variables = new Dictionary<string, string>();
+            bool printCommands = false;
 
-            map.NeutralFromatters.AddRange(new[] { ";" });
             map.Root = new InputNode()
             {
                 Children = new Dictionary<string, InputNode>(StringComparer.OrdinalIgnoreCase)
                 {
+                    {
+                        "@", 
+                        new InputNode(a =>
+                        {
+                            Dictionary<string, string> adds;
+                            InputNode.EvalArguments(a, out adds, map.ArgumentIndicators);
+                            string echo;
+                            if (adds.TryGetValue("echo", out echo))
+                                switch(echo.ToUpper()){
+                                    case "OFF":
+                                        printCommands = false;
+                                        break;
+                                    case "ON":
+                                        printCommands = true;
+                                        break;
+                                }
+
+                            return "[Optionals set]";
+                        })
+                    },
                     { "Clear", new InputNode(a => { Console.Clear(); return "[Console Cleared]"; }) },
                     { "Freeze", new InputNode(a => "{" + string.Join(" ", a.ToArray()) + "}") },
                     { "Set", new InputNode(a => variables.AddOrOverride(a[0], a[1]) ) },
                     {
+                        "IfEquals",
+                        new InputNode(a =>
+                        {
+                            Dictionary<string, string> funcs;
+                            InputNode.EvalArguments(a, out funcs, map.ArgumentIndicators);
+                            if (a[0] == a[1])
+                            {
+                                string then;
+                                if (funcs.TryGetValue("then", out then))
+                                    return map.Eval(then);
+                                else
+                                    return "True";
+                            }
+                            else
+                            {
+                                string els;
+                                if (funcs.TryGetValue("else", out els))
+                                    return map.Eval(els);
+                                else
+                                    return "False";
+                            }
+                        })
+                    },
+                    {
                         "Script",
                         new InputNode(a => 
                         {
+                            string code = null;
                             string[] lines = null;
                             try
                             {
-                                lines = File.ReadAllLines(Path.Combine(Directory.GetCurrentDirectory(), a[0]));
+                                code = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), a[0]));
                             }
                             catch (IOException)
                             {
                                 return $"Path \"{a[0]}\" not found";
                             }
-                            Array.ForEach(lines, l => map.Eval(l));
+                            code = code.Replace("\n", "");
+                            code = code.Replace("\r", "");
+                            lines = code.Split(new[]{ ";" }, StringSplitOptions.RemoveEmptyEntries);
+                            Array.ForEach(lines, l => { if (printCommands) Console.WriteLine("Evaluating:" + l); map.Eval(l); } );
                             return "[Script iterated]";
                         })
                     },
@@ -300,16 +348,13 @@ namespace ConsoleInputMapEngine
                                     {
                                         Dictionary<string, string> adds;
                                         InputNode.EvalArguments(a, out adds, map.ArgumentIndicators);
-                                        string sep;
                                         string funcArgs;
-                                        if (!adds.TryGetValue("seperator", out sep))
-                                            return "[ERROR]";
                                         if (!adds.TryGetValue("func", out funcArgs))
                                             return "[Error: no func arguments]";
                                         else
                                         {
                                             List<string> result = new List<string>();
-                                            a.ForEach(aa => result.Add(map.Eval(string.Join(" ", funcArgs.Split(new[]{ sep }, StringSplitOptions.RemoveEmptyEntries).Concat(new[]{ aa }).ToArray()))));
+                                            a.ForEach(aa => string.Join(" ", map.Eval(funcArgs + map.Seperators[0] + aa)));
                                             return string.Join(" ", result.ToArray());
                                         }
                                     })
